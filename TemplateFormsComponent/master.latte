@@ -1,0 +1,32 @@
+{* The form master file. Feel free to extend it in templates. *}
+<form action="{$action}" method="{$method}" class="form-horizontal">
+    {* hidden fields *}
+    {foreach $hiddens as $key => $val}
+        <input type="hidden" name="{$key}" value="{$val}" />
+    {/foreach}
+
+    {* errors *}
+    {foreach $errors as $error}
+        <div class="alert alert-danger">{$error}</div>
+    {/foreach}
+
+    {* groups *}
+    {foreach $groups as $group}
+        {if !empty($group->label)}
+        <fieldset>
+            <legend>{$group->label}</legend>
+            {if !empty($group->description)}<p>{$group->description}</p>{/if}
+        {/if}
+
+        {foreach $group->controls as $control}
+            {include $control->latte control => $control}
+        {/foreach}
+
+        {if !empty($group->label)}</fieldset>{/if}
+    {/foreach}
+
+    {* unrendered controls *}
+    {foreach $controls as $control}
+        {include $control->latte control => $control}
+    {/foreach}
+</form>
