@@ -5,13 +5,15 @@
  * @copyright Animal Group
  */
 
-use Nette\Forms\Controls;
+namespace AG\Forms;
 
 /**
  * The base template renderer for forms.
  *
  * Usage:
  * $form->addRenderer(new TemplateFormsRenderer);
+ *
+ * If you want to override entire
  *
  * You can customize the directory, where all the templates resides.
  * Created with twitter bootstrap in mind. If you want to append options, use:
@@ -28,30 +30,33 @@ use Nette\Forms\Controls;
  * @author Pavel Ptacek
  * @version pre-alpha
  */
-class TemplateFormRenderer extends Nette\Object implements \Nette\Forms\IFormRenderer {
+class TemplateRenderer extends \Nette\Object implements \Nette\Forms\IFormRenderer {
 
-    /** @var string directory where all the templates resides */
-    private $directory;
+    /** @var string master file */
+    private $master;
 
     /** @var bool true, if you want to display the field errors also as form errors */
     private $showFieldErorrsGlobally = false;
 
-    /** @var array buttonstack in order to render buttons after a first field */
+    /** @var \AG\Forms\Template\Control[] the current control stack */
+    private $controlStack = array();
+
+    /** @var array the current button stack */
     private $buttonStack = array();
 
     /**
-     * @param string $dir full path to directory, where all the template files resides.
+     * @param string $master full path to the master file
      */
-    public function __construct($dir = null) {
-        if($dir === null) {
-            $dir = __DIR__ . '/bootstrap';
+    public function __construct($master = null) {
+        if($master === null) {
+            $master = __DIR__ . '/master.latte';
         }
-        if(!is_dir($dir)) {
-            throw new \Nette\InvalidArgumentException('Directory "' . $dir . '" does not exists.');
+        if(!is_readable($master)) {
+            throw new \Nette\InvalidArgumentException('Master file "' . $master . '" is not readable.');
         }
 
         // Save
-        $this->directory = $dir;
+        $this->master = $master;
     }
 
     /**
@@ -67,46 +72,45 @@ class TemplateFormRenderer extends Nette\Object implements \Nette\Forms\IFormRen
     /**
      * Render the templates
      *
-     * @param Nette\Forms\Form $form
+     * @param \Nette\Forms\Form $form
      * @return void
      */
-    public function render(Nette\Forms\Form $form) {
+    public function render(\Nette\Forms\Form $form) {
         $translator = $form->getTranslator();
         foreach($form->getControls() as $control) {
             $control->setOption('rendered', false);
         }
 
+        // Create master template
+        $master = $this->createTemplate($this->master, $form);
+
         /**
-         * Step 1: render beginning of the form
+         * Preproccess the form fields into given structure, which template requires (for simple working with it there)
          */
-        $begin = $this->createTemplate($this->directory . '/formBegin.latte', $form);
-        $begin->hiddens = array();
-        $begin->method = $form->getMethod();
-        $begin->action = $form->getAction();
+        $master->hiddens = array();
+        $master->method = $form->getMethod();
+        $master->action = $form->getAction();
         if (strcasecmp($form->getMethod(), 'get') === 0) {
             $el = clone $form->getElementPrototype();
             $url = explode('?', (string) $el->action, 2);
-            $begin->action = $url[0];
+            $master->action = $url[0];
             if (isset($url[1])) {
                 foreach (preg_split('#[;&]#', $url[1]) as $param) {
                     $parts = explode('=', $param, 2);
                     $name = urldecode($parts[0]);
                     if (!isset($form[$name])) {
-                        $begin->hiddens[$name] = urldecode($parts[1]);
+                        $master->hiddens[$name] = urldecode($parts[1]);
                     }
                 }
             }
         }
 
-        // Output begin template
-        echo $begin;
-
         /**
-         * Step 2: render form-related errors
+         * Step 2: prepare form-related errors
          */
+        $master->errors = array();
         if(count($form->getErrors()) > 0) {
-            $errors = $this->createTemplate($this->directory . '/formErrors.latte', $form);
-            $errors->errors = $form->getErrors();
+            $master->errors = $form->getErrors();
 
             // Remove the field errors from form errors?
             if(!$this->showFieldErorrsGlobally) {
@@ -116,129 +120,119 @@ class TemplateFormRenderer extends Nette\Object implements \Nette\Forms\IFormRen
                         continue;
                     }
 
-                    $errors->errors = array_diff($errors->errors, $control->getErrors());
+                    $master->errors = array_diff($master->errors, $control->getErrors());
                 }
             }
 
             // If we have translator, translate!
             if($translator) {
-                foreach($errors->errors as $key => $val) {
-                    $errors->errors[$key] = $translator->translate($val);
+                foreach($master->errors as $key => $val) {
+                    $master->errors[$key] = $translator->translate($val);
                 }
             }
-
-            // and show the error part
-            echo $errors;
         }
 
         /**
-         * Step 3: render groups, if we have them
+         * Step 3: prepare groups
          */
+        $master->groups = array();
         foreach($form->getGroups() as $group) {
-            /** @var $group Nette\Forms\ControlGroup */
+            /** @var $group \Nette\Forms\ControlGroup */
             if(!$group->getControls() || !$group->getOption('visual')) {
                 continue;
             }
 
-            // The group beggining
-            $groupBegin = $this->createTemplate($this->directory . '/groupBegin.latte', $form);
-            $groupBegin->label = $group->getOption('label');
-            $groupBegin->description = $group->getOption('description');
+            // Define group
+            $one = new Template\Group;
+            $one->label = $group->getOption('label');
+            $one->description = $group->getOption('description');
+            $one->controls = array();
             if(!empty($translator)) {
-                $groupBegin->label = $translator->translate($groupBegin->label);
-                $groupBegin->description = $translator->translate($groupBegin->description);
+                $one->label = $translator->translate($one->label);
+                $one->description = $translator->translate($one->description);
             }
-            echo $groupBegin;
 
             // Render controls
             foreach($group->getControls() as $control) {
-                $this->renderControl($control, $form);
+                $this->addControl($control, $form);
             }
-            $this->renderButtonStack($form);
+            $this->appendButtonStack();
+            $one->controls = $this->getControlStack();
 
-            // The group end
-            $groupEnd = $this->createTemplate($this->directory . '/groupEnd.latte', $form);
-            $groupEnd->label = $group->getOption('label');
-            $groupEnd->description = $group->getOption('description');
-            if(!empty($translator)) {
-                $groupEnd->label = $translator->translate($groupBegin->label);
-                $groupEnd->description = $translator->translate($groupBegin->description);
-            }
-            echo $groupEnd;
+            // Append to template
+            $master->groups[] = $one;
         }
 
         /**
          * Step 4: render rest of the controls
          */
+        $master->controls = array();
         foreach($form->getControls() as $control) {
-            $this->renderControl($control, $form);
+            $this->addControl($control, $form);
         }
-        $this->renderButtonStack($form);
+        $this->appendButtonStack();
+        $master->controls = $this->getControlStack();
 
         /**
-         * Step 5: close the form
+         * And render master template!
          */
-        $end = clone $begin;
-        $end->setFile($this->directory . '/formEnd.latte');
-        echo $end;
+        echo $master;
     }
 
     /**
-     * Render individual control
-     *
-     * @param Nette\Forms\Controls\BaseControl $control
-     * @param Nette\Forms\Form $form
+     * Prepares one control and adds it to the control stack
+     * @param \Nette\Forms\Controls\BaseControl $control
+     * @param \Nette\Forms\Form $form
      * @return void
      */
-    protected function renderControl(Controls\BaseControl $control, Nette\Forms\Form $form) {
+    protected function addControl(\Nette\Forms\Controls\BaseControl $control, \Nette\Forms\Form $form) {
         // skip?
         if ($control->getOption('rendered') || $control->getForm(FALSE) !== $form) {
             return;
         }
 
+        // Create instance
+        $one = new Template\Control($control);
+
         // Button?
-        if($control instanceof Controls\Button) {
-            $this->buttonStack[] = $control;
+        if($control instanceof \Nette\Forms\Controls\Button) {
+            $this->buttonStack[] = $one;
             return;
         }
-        $this->renderButtonStack($form);
-
-        // Get control template, render, set rendered
-        $ex = explode('\\', get_class($control));
-        $template = $this->createTemplate($this->directory . '/controls/' . array_pop($ex) . '.latte', $form);
-        $template->field = $control;
-
-        echo $template;
+        $this->appendButtonStack();
+        $this->controlStack[] = $one;
         $control->setOption('rendered', true);
     }
 
     /**
-     * Renders button stack from $this->buttonStack
-     * @param Nette\Forms\Form $form
+     * Append button stack into the $this->controlStack and clear the button stack
+     * @return void
      */
-    protected function renderButtonStack(Nette\Forms\Form $form) {
-        if(empty($this->buttonStack)) {
-            return;
-        }
-
-        // Get the button stack & render them
-        $template = $this->createTemplate($this->directory . '/buttonStack.latte', $form);
-        $template->buttons = $this->buttonStack;
-        echo $template;
-
-        // Reset button stack & return
-        foreach($this->buttonStack as $control) {
-            $control->setOption('rendered', true);
+    protected function appendButtonStack() {
+        foreach($this->buttonStack as $button) {
+            $button->field->setOption('rendered', true);
+            $this->controlStack[] = $button;
         }
         $this->buttonStack = array();
     }
 
     /**
+     * Get current control stack & clear it
+     * @return array
+     */
+    protected function getControlStack() {
+        $stack = $this->controlStack;
+        $this->controlStack = array();
+        return $stack;
+    }
+
+    /**
      * Create template for given file
      * @param string $template
-     * @return
+     * @param \Nette\Forms\Form $form
+     * @return \Nette\Templating\FileTemplate
      */
-    protected function createTemplate($template, Nette\Forms\Form $form) {
+    protected function createTemplate($template, \Nette\Forms\Form $form) {
         $template = new \Nette\Templating\FileTemplate($template);
         $template->registerFilter(new \Nette\Latte\Engine());
         if($form->getTranslator()) {

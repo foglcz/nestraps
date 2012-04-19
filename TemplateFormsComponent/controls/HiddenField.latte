@@ -1,0 +1,7 @@
+{**
+ * Default hidden field template
+ *
+ * @param AG\Forms\Template\Control $control
+ **}
+{var field => $control->field}
+<input type="hidden" name="{$field->getName()}" value="{$field->getValue()}" />
