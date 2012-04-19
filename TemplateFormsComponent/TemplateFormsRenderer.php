@@ -209,10 +209,16 @@ class TemplateRenderer extends \Nette\Object implements \Nette\Forms\IFormRender
      * @return void
      */
     protected function appendButtonStack() {
+        if(empty($this->buttonStack)) {
+            return;
+        }
+
+        $override = null;
         foreach($this->buttonStack as $button) {
             $button->field->setOption('rendered', true);
-            $this->controlStack[] = $button;
+            $override = $button->field->getOption('latteForStack', false) ? $button->field->getOption('latteForStack') : null;
         }
+        $this->controlStack[] = new Template\ButtonStack($this->buttonStack, $override);
         $this->buttonStack = array();
     }
 

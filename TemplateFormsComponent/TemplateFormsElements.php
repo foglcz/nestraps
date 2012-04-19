@@ -19,6 +19,9 @@ class Control {
     /** @var string latte file */
     public $latte;
 
+    /** @var array the html parameters for latte macros */
+    private $params;
+
     /**
      * Create new instance
      *
@@ -41,7 +44,78 @@ class Control {
      * @return array
      */
     public function getTextInputDefinition() {
-        // @todo ;)
+        if(!empty($this->params)) {
+            return $this->params;
+        }
+
+        $params = array();
+        $params['type'] = $this->field->control->type ? $this->field->control->type : 'text';
+        $params['name'] = $this->field->getHtmlName();
+        $params['id'] = $this->field->getHtmlId();
+        $params['value'] = $this->field->getValue();
+        $params['class'] = $this->field->getOption('class', false) ? $this->field->getOption('class') : 'input-xlarge';
+
+        // Optional parameters
+        if($this->field->isRequired()) { $params['required'] = 'required'; }
+        if($this->field->disabled) { $params['disabled'] = 'disabled'; }
+        if($this->field->getOption('placeholder', false)) { $params['placeholder'] = $this->field->getOption('placeholder'); }
+        if(!empty($this->field->control->size)) { $params['size'] = $this->field->control->size; }
+        if(!empty($this->field->control->maxlength)) { $params['maxlength'] = $this->field->control->maxlength; }
+
+        // Rules?
+        $rules = $this->exportRules();
+        if($rules) { $params['data-nette-rules'] = $rules; }
+
+        // done
+        return $this->params = $params;
+    }
+
+    /**
+     * Copycat from Nette\Forms\Controls\BaseControl due to PROTECTED STATUS of the method.
+     * @param array $rules
+     * @return string
+     */
+    protected function exportRules()
+    {
+        $rules = $this->field->getRules();
+        $payload = array();
+        foreach ($rules as $rule) {
+            if (!is_string($op = $rule->operation)) {
+                $op = callback($op);
+                if (!$op->isStatic()) {
+                    continue;
+                }
+            }
+            if ($rule->type === \Nette\Forms\Rule::VALIDATOR) {
+                $item = array('op' => ($rule->isNegative ? '~' : '') . $op, 'msg' => $rules->formatMessage($rule, FALSE));
+
+            } elseif ($rule->type === \Nette\Forms\Rule::CONDITION) {
+                $item = array(
+                    'op' => ($rule->isNegative ? '~' : '') . $op,
+                    'rules' => self::exportRules($rule->subRules),
+                    'control' => $rule->control->getHtmlName()
+                );
+                if ($rule->subRules->getToggles()) {
+                    $item['toggle'] = $rule->subRules->getToggles();
+                }
+            }
+
+            if (is_array($rule->arg)) {
+                foreach ($rule->arg as $key => $value) {
+                    $item['arg'][$key] = $value instanceof IControl ? (object) array('control' => $value->getHtmlName()) : $value;
+                }
+            } elseif ($rule->arg !== NULL) {
+                $item['arg'] = $rule->arg instanceof IControl ? (object) array('control' => $rule->arg->getHtmlName()) : $rule->arg;
+            }
+
+            $payload[] = $item;
+        }
+
+        // Post-proccess
+        $return = substr(json_encode($payload), 1, -1);
+        $return = preg_replace('#"([a-z0-9]+)":#i', '$1:', $return);
+        $return = preg_replace('#(?<!\\\\)"([^\\\\\',]*)"#i', "'$1'", $return);
+        return $return ? $return : false;
     }
 }
 
@@ -59,4 +133,27 @@ class Group {
 
     /** @var array the controls within group */
     public $controls = array();
+}
+
+/**
+ * Button stack
+ *
+ * @author Pavel Ptacek
+ */
+class ButtonStack {
+    /** @var Control[] */
+    public $buttons = array();
+
+    /** @var string latte file */
+    public $latte;
+
+    /**
+     * Create new buttonstack for templates
+     * @param array $controls
+     * @param string $override
+     */
+    public function __construct(array $controls, $override = null) {
+        $this->buttons = $controls;
+        $this->latte = $override ? $override : 'controls/ButtonStack.latte';
+    }
 }

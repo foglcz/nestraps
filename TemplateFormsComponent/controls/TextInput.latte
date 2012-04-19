@@ -5,19 +5,12 @@
  **}
 
 {var field => $control->field}
+{var params => $control->getTextInputDefinition()}
 {var ctrCls => $field->getOption('status', false) ? $field->getOption('status') : ($field->hasErrors() ? 'error' : '')}
 <div class="control-group {$ctrCls}">
     <label class="control-label" for="{!$field->getHtmlId()}">{$field->caption}</label>
 
     <div class="controls">
-        {var disabled => $field->disabled ? ' disabled' : ''}
-        {var inputClass => $field->getOption('class', '')}
-        {var placeholder => $field->getOption('placeholder') ? ' placeholder="'.$field->getOption('placeholder').'"' : ''}
-        {var inputType => $field->control->type ? $field->control->type : 'text'}
-        {var inputSize => $field->control->size ? ' size="'.$field->control->size.'"' : ''}
-        {var maxlength => $field->control->maxlength ? ' maxlength="'.$field->control->maxlength.'"' : ''}
-        {capture $input}<input class="input-xlarge {$inputClass}" id="{!$field->getHtmlId()}" type="{$inputType}" name="{$field->getName()}" value="{$field->getValue()}"{!$disabled}{!$placeholder}{!$inputSize}{!$maxlength}>{/capture}
-
         {* prepend / append? *}
         {if $field->getOption('prepend') || $field->getOption('append')}
         <div class="{if $field->getOption('prepend')}input-prepend{/if} {if $field->getOption('append')}input-append{/if}">
@@ -28,10 +21,10 @@
             {if $field->getOption('prepend') && $field->getOption('prepend-button')}{capture $prepend}<button class="btn" id="{$field->getOption('prepend-button')}">{$field->getOption('prepend')}</button>{/capture}{/if}
             {if $field->getOption('append') && $field->getOption('append-button')}{capture $append}<button class="btn" id="{$field->getOption('append-button')}">{$field->getOption('append')}</button>{/capture}{/if}
 
-            {!$prepend}{!$input}{!$append}
+            {!$prepend}{\Nette\Utils\Html::el('input')->addAttributes($params)}{!$append}
         </div>
         {else}
-        {!$input}
+            {\Nette\Utils\Html::el('input')->addAttributes($params)}
         {/if}
 
         {if $field->getOption('help', false) && !$field->hasErrors()}
