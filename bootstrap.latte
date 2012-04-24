@@ -203,12 +203,5 @@
         {include #$block control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
         {? $control->setOption('rendered', true)}
     {/foreach}
-
-    {* render hiddens last *}
-    {foreach $renderer->findFields('HiddenField') as $control}
-        {continueIf $control->getOption('rendered')}
-        {include #HiddenField control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
-        {? $control->setOption('rendered', true)}
-    {/foreach}
 {/form}
 {/block}
