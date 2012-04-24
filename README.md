@@ -86,7 +86,7 @@ If you want to overload some field but not overload the input globally, use foll
 
 NOTE:
 -----
-In the template, the <hidden> fields are rendered as last. The easiest way to extend any field is:
+In the template, the hidden fields are rendered as last. The easiest way to extend any field is:
 
 `$form->addHidden(...)->setOption('latte', 'path/to/your/field.latte')`
 
