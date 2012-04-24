@@ -161,40 +161,6 @@ class NestrapRenderer implements \Nette\Forms\IFormRenderer {
     }
 
     /**
-     * @param \Nette\Forms\IControl $control
-     * @return bool
-     *
-     * @internal
-     * @author Filip Procházka
-     */
-    public static function isRadioList(\Nette\Forms\IControl $control) {
-        return $control instanceof \Nette\Forms\Controls\RadioList;
-    }
-
-    /**
-     * @param \Nette\Forms\Controls\RadioList $control
-     * @return bool
-     *
-     * @internal
-     * @author Filip Procházka
-     */
-    public static function getRadioListItems(\Nette\Forms\Controls\RadioList $control) {
-        $items = array();
-        foreach ($control->items as $key => $value) {
-            $html = $control->getControl($key);
-            $html[1]->addClass('radio');
-
-            $items[$key] = (object)array(
-                'input' => $html[0],
-                'label' => $html[1],
-                'caption' => $html[1]->getText()
-            );
-        }
-
-        return $items;
-    }
-
-    /**
      * Opens button stack and returns true if it was closed previously
      *
      * @return bool
