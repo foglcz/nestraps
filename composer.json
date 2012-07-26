@@ -1,0 +1,24 @@
+{
+    "name": "foglcz/nestraps",
+    "description": "Nestraps - Twitter bootstrap renderer for Nette Framework (without assets)",
+    "keywords": ["nette", "forms", "bootstrap"],
+    "homepage": "http://github.com/foglcz/nestraps",
+    "license": ["LGPL"],
+    "authors":[
+        {
+            "name":"Filip Procházka",
+            "homepage":"http://hosiplan.com"
+        },
+        {
+            "name": "Pavel Ptáček",
+            "homepage": "http://animalgroup.cz"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/foglcz/nestraps/issues"
+    },
+    "require":{
+        "php": ">=5.3.2",
+        "nette/nette": "2.*"
+    }
+}

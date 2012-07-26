@@ -14,7 +14,7 @@
  *   $form->addCheckbox('chk3', 'caption 3')->setOption('inline', true);
  *
  * Buttons have some special classes as well:
- * $form->addSubmit()->setOption('button-class', 'btn-success')
+ * $form->addSubmit()->setOption('class', 'btn-success')
  *
  * Prepend/append can be used with conjunction of:
  * $field->setOption('prepend-button', 'id');
@@ -78,12 +78,12 @@
                 {* append *}
                 {var append => \Nette\Utils\Html::el()}
                 {if $control->getOption('append-button', false)}
-                    {? $prepend->setName('button')->setId($control->getOption('append-button'))->setClass('btn')->addClass($control->getOption('append-button-class', ''))}
+                    {? $append->setName('button')->setId($control->getOption('append-button'))->setClass('btn')->addClass($control->getOption('append-button-class', ''))}
                 {elseif $control->getOption('append', false) && !$control->getOption('append-button')}
-                    {? $prepend->setName('span')->setClass('add-on')}
+                    {? $append->setName('span')->setClass('add-on')}
                 {/if}
                     {if $control->getOption('append', false)}
-                    {? $prepend->setText($control->getOption('append'))}
+                    {? $append->setText($control->getOption('append'))}
                 {/if}
 
                 {$prepend}{input $renderer->getControlName($control)}{$append}
@@ -147,7 +147,7 @@
 
 {* buttons *}
 {define #Button}
-    {? $control->controlPrototype->addClass('btn')->addClass($control->getOption('button-class', ''))}
+    {? $control->controlPrototype->addClass('btn')->addClass($control->getOption('class', ''))}
     {if $renderer->openStack()}<div class="form-actions">{/if}
     {input $renderer->getControlName($control)}
     {if $renderer->closeStack($iterator, $control)}</div>{/if}
@@ -183,13 +183,15 @@
         {/if}
 
         {foreach $group->controls as $control}
-            {continueIf $control->getOption('rendered')}
-            {if $control->getOption('latte', false)}
+            {continueIf $control->getForm(FALSE) !== $form || $control->getOption('rendered') || !$group->getControls() || !$group->getOption('visual')}
+            {var $block => $control->getOption('blockname')}
+            {ifset #$block}
+                {include #$block control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+            {elseif $control->getOption('latte', false)}
                 {include $control->getOption('latte') control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
             {else}
-                {var $block => $control->getOption('blockname')}
-                {include #$block control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
-            {/if}
+                {include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+            {/ifset}
             {? $control->setOption('rendered', true)}
         {/foreach}
 
@@ -198,9 +200,15 @@
 
     {* rest of the controls *}
     {foreach $form->getControls() as $control}
-        {continueIf $control->getOption('rendered')}
+        {continueIf $control->getForm(FALSE) !== $form || $control->getOption('rendered')}
         {var $block => $control->getOption('blockname')}
-        {include #$block control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+        {ifset #$block}
+            {include #$block control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+        {elseif $control->getOption('latte', false)}
+            {include $control->getOption('latte') control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+        {else}
+            {include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+        {/ifset}
         {? $control->setOption('rendered', true)}
     {/foreach}
 {/form}
