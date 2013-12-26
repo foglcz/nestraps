@@ -145,29 +145,30 @@
 
 {* Checkbox + checkbox inline styles. Thanks to fucking bootstrap, we have to fucking copypastah codez. *}
 {define #Checkbox}
+    {? $horizontalForm = (strpos($form->getElementPrototype()->attrs['class'], 'form-horizontal') !== false)}
+
     <div n:if="!$control->getOption('inline', false)" id="{$control->htmlId}-pair" n:class="form-group, $control->getOption('status')?  'has-' . $control->getOption('status'), $control->getOption('required')? required, $control->errors ? has-error">
-        <div class="col-sm-offset-2 col-sm-10">
+        {if $horizontalForm}<div class="col-sm-offset-2 col-sm-10">{/if}
             <div class="checkbox">
                 {!$control->label->addClass('inline checkbox')->startTag()}{input $renderer->getControlName($control)}{$control->caption}{!$control->label->endTag()}
             </div>
             {include #helpAndError control => $control}
-        </div>
+        {if $horizontalForm}</div>{/if}
     </div>
-
-    {? $horizontalForm = (strpos($form->getElementPrototype()->attrs['class'], 'form-horizontal') !== false)}
 
     {if $control->getOption('inline', false)}
         {if $renderer->openStack()}
             <div id="{$control->htmlId}-pair" n:class="form-group, $control->getOption('status')?  'has-' . $control->getOption('status'), $control->getOption('required')? required, $control->errors ? has-error">
-            <label n:if="!isset($control->labelPrototype->class) && $horizontalForm" class="control-label col-xs-12 col-sm-2">{$control->getOption('label')}</label>
-            <label n:if="!isset($control->labelPrototype->class) && !$horizontalForm" class="control-label">{$control->getOption('label')}</label>
+            <label n:if="$horizontalForm" class="control-label col-xs-12 col-sm-2">{$control->getOption('label')}</label>
+            <label n:if="!$horizontalForm" class="control-label">{$control->getOption('label')}</label>
             {if $horizontalForm}<div class="col-xs-12 col-sm-6">{/if}
+            {if !$horizontalForm}<div>{/if}
         {/if}
 
         {!$control->label->addClass('checkbox-inline')->startTag()}{input $renderer->getControlName($control)}{$control->caption}{!$control->label->endTag()}
     {/if}
     {if $renderer->closeStack($iterator, $control)}
-        {if $horizontalForm}</div>{/if}
+        </div>
         {include #helpAndError control => $control}
         </div>
     {/if}
@@ -175,10 +176,11 @@
 
 {* buttons *}
 {define #Button}
+    {? $horizontalForm = (strpos($form->getElementPrototype()->attrs['class'], 'form-horizontal') !== false)}
     {? $control->controlPrototype->addClass('btn')->addClass($control->getOption('class', ''))}
-    {if $renderer->openStack()}<div class="form-group"><div class="col-sm-offset-2 col-sm-10">{/if}
+    {if $renderer->openStack()}<div class="form-group">{if $horizontalForm}<div class="col-sm-offset-2 col-sm-10">{/if}{/if}
     {input $renderer->getControlName($control)}
-    {if $renderer->closeStack($iterator, $control)}</div></div>{/if}
+    {if $renderer->closeStack($iterator, $control)}{if $horizontalForm}</div>{/if}</div>{/if}
 {/define}
 
 {* Inheriting fields *}

@@ -176,14 +176,14 @@ class HomepagePresenter extends BasePresenter {
         // Type of form? form-horizontal style is default.
         //$form->elementPrototype->attrs['class'] = 'form-inline';
         //$form->elementPrototype->attrs['class'] = 'form-search';
-//        $form->elementPrototype->attrs['class'] = 'form-default';
+        //$form->elementPrototype->attrs['class'] = 'form-default';
 
         // Append elements
         $this->appendControls($form);
 
         // Style the input with class
         $form['input_with_class']->setOption('placeholder', '.input-lg & readonly')
-            ->setOption('class', 'input-lg');
+            ->setOption('class', 'input-lg form-control');
 
         return $form;
     }
