@@ -7,22 +7,26 @@ Installation
 $ composer require foglcz/nestraps
 ```
 
-
 How to use in nette
 -------------------
 
 Update your `config.neon`:
-
-
-
-```php
-$form->setRenderer(new foglcz\Nestrap);
+```
+    factories:
+        form:
+            parameters: [type]
+            class: \Nette\Application\UI\Form
+            setup:
+                - setRenderer(\foglcz\Nestraps(%type%, @cacheStorage))
 ```
 
-How to use ideally: (from presenter)
-
+And then in your presenter:
 ```php
-$form->setRenderer(new foglcz\Nestrap(null, $this->context->cacheStorage));
+public function createComponentYourFormName($name) {
+    $form = $this->getContext()->createForm(\foglcz\Nestraps::BOOTSTRAP);
+    $form = $this->getContext()->createForm(\foglcz\Nestraps::FOUNDATION);
+    // ...
+}
 ```
 
 What is it
@@ -103,7 +107,3 @@ In the template, the hidden fields are rendered as last. The easiest way to exte
 License
 -------
 LGPL.
-
---------------------------------------------------------------------------------
-
-discussion: http://forum.nette.org/cs/10274-convetionalrenderer-latte-pomocnik-pro-rucni-renderovani-formulare-tw-bootstrap
