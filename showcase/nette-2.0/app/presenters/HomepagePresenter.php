@@ -11,6 +11,9 @@ class HomepagePresenter extends BasePresenter {
      * Components for all the forms, to keep the API same
      */
     protected function appendControls(\Nette\Application\UI\Form $form) {
+        // General form errors
+        $form->addError('This is a generic form error.');
+
         // Showcase
         $form->addText('simple', 'Simple input');
         $form->addText('placeholder', 'Input with placeholder')->setOption('placeholder', 'This is a placeholder value');
@@ -71,8 +74,14 @@ class HomepagePresenter extends BasePresenter {
 
         // Input with error on it via Nette
         $form->addText('error', 'Nette error showcase')->addError('Field cannot be empty');
+    }
 
-        // Submits
+    /**
+     * Helper for appending submits
+     *
+     * @param \Nette\Application\UI\Form $form
+     */
+    protected function appendSubmits(\Nette\Application\UI\Form $form) {
         $form->addSubmit('btn', 'Default');
         $form->addSubmit('btnprimary', 'Primary')->setOption('class', 'btn-primary');
         $form->addSubmit('btninfo', 'Info')->setOption('class', 'btn-info');
@@ -83,6 +92,7 @@ class HomepagePresenter extends BasePresenter {
         $form->addSubmit('btnlink', 'Link')->setOption('class', 'btn-link');
         $form->addSubmit('btnprimarylarge', 'Primary & large & block')->setOption('class', 'btn-primary btn-large btn-block');
     }
+
 
     /**
      * Bootstrap 2 showcase
@@ -161,6 +171,9 @@ class HomepagePresenter extends BasePresenter {
             ->setOption('help', 'The segmented prepend/append works only when there\'s only prepend OR append, not both. See botstrap docs for details.')
             ->setOption('help-style', 'block');
 
+        // Append submits
+        $this->appendSubmits($form);
+
         return $form;
     }
 
@@ -179,11 +192,73 @@ class HomepagePresenter extends BasePresenter {
         //$form->elementPrototype->attrs['class'] = 'form-default';
 
         // Append elements
+        $form->addGroup('Default styles');
         $this->appendControls($form);
 
         // Style the input with class
         $form['input_with_class']->setOption('placeholder', '.input-lg & readonly')
             ->setOption('class', 'input-lg form-control');
+
+        // Bootstrap v3 specifics
+        $form->addGroup('Specifics for bootstrap v3');
+
+        // Prepend radio / checkbox
+        $form->addText('prepend_checkbox', 'Prepend checkbox')
+            ->setOption('prepend-html', '<span class="input-group-addon"><input type="checkbox"></span>');
+        $form->addText('prepend_radio', 'Prepend radio')
+            ->setOption('prepend-html', '<span class="input-group-addon"><input type="radio"></span>');
+
+        // Multiappend / prepend buttons
+        $form->addText('append_multibutton', 'Multibutton append')
+            ->setOption('append-html', '<div class="input-group-btn"><button class="btn" type="button">Search</button><button class="btn" type="button">Options</button></div>')
+            ->setOption('help', 'Prepend is the same - you just use "prepend-html" option');
+
+        // Multiappend / prepend dropdowns
+        $form->addText('prepend_dropdown', 'Multidropdown append&prepend')
+            ->setOption('prepend-html', '<div class="input-group-btn">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Action <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a href="#">Action</a></li>
+                  <li><a href="#">Another action</a></li>
+                  <li><a href="#">Something else here</a></li>
+                  <li class="divider"></li>
+                  <li><a href="#">Separated link</a></li>
+                </ul>
+              </div><!-- /btn-group -->')
+            ->setOption('append-html', ' <div class="input-group-btn">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Action <span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right">
+                  <li><a href="#">Action</a></li>
+                  <li><a href="#">Another action</a></li>
+                  <li><a href="#">Something else here</a></li>
+                  <li class="divider"></li>
+                  <li><a href="#">Separated link</a></li>
+                </ul>
+              </div><!-- /btn-group -->
+            </div><!-- /input-group -->');
+
+        // Prepend / append : segmented
+        $form->addText('prepapp_segmented', 'Append&prepend: segmented')
+            ->setOption('prepend-html', '<div class="input-group-btn">
+                                          <button type="button" class="btn btn-default" tabindex="-1">Action</button>
+                                          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                          </button>
+                                          <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Action</a></li>
+                                            <li><a href="#">Another action</a></li>
+                                            <li><a href="#">Something else here</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href="#">Separated link</a></li>
+                                          </ul>
+                                        </div>')
+            ->setOption('help', 'The segmented prepend/append works just based on markup - there\'s no need to use setOption(prepend-segmented) with bootstrap v3.')
+            ->setOption('help-style', 'block');
+
+        // Append submits
+        $form->addGroup('Submit line');
+        $this->appendSubmits($form);
 
         return $form;
     }

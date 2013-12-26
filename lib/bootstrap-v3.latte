@@ -202,14 +202,13 @@
 {form $form role => 'form'}
     {* errors *}
     <div class="row" n:if="!empty($errors)">
-        <div class="col-xs-12 col-md-9 col-md-offset-3 text-danger" n:foreach="$errors as $error">{$error}</div>
+        <div class="alert alert-danger" n:foreach="$errors as $error">{$error}</div>
     </div>
 
     {* groups *}
     {foreach $form->getGroups() as $group}
         {if $group->getOption('label', false)}
-        <fieldset>
-            <legend>{$group->getOption('label')}</legend>
+            <div class="row"><fieldset><legend>{$group->getOption('label')}</legend>
             {if $group->getOption('description', false)}<p>{$group->getOption('description')}</p>{/if}
         {/if}
 
@@ -226,7 +225,7 @@
             {? $control->setOption('rendered', true)}
         {/foreach}
 
-        {if $group->getOption('label', false)}</fieldset>{/if}
+        {if $group->getOption('label', false)}</fieldset></div>{/if}
     {/foreach}
 
     {* rest of the controls *}
