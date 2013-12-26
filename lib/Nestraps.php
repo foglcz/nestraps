@@ -32,19 +32,25 @@ use Nette\Utils\Strings;
 class Nestraps implements \Nette\Forms\IFormRenderer {
 
     /** @var string Default bootstrap (v 3.0) */
-    const BOOTSTRAP = 'bootstrap.latte';
+    const BOOTSTRAP = 'bootstrap-v2.latte';
+
+    /** @var string Default foundation (v 5.0) */
+    const FOUNDATION = 'foundation-v5.latte';
 
     /** @var string Older bootstrap (v 2.3.2) */
     const BOOTSTRAP_2 = 'bootstrap-v2.latte';
 
-    /** @var string Default foundation (v 5.0) */
-    const FOUNDATION = 'foundation.latte';
+    /** @var string Older bootstrap (v 2.3.2) */
+    const BOOTSTRAP_3 = 'bootstrap-v3.latte';
+
+    /** @var string Even older foundation (v 3.2.5) */
+    const FOUNDATION_3 = 'foundation-v3.latte';
 
     /** @var string Older foundation (v 4.3.2) */
     const FOUNDATION_4 = 'foundation-v4.latte';
 
-    /** @var string Even older foundation (v 3.2.5) */
-    const FOUNDATION_3 = 'foundation-v3.latte';
+    /** @var string Older foundation (v 4.3.2) */
+    const FOUNDATION_5 = 'foundation-v5.latte';
 
     /**  @var \Nette\Templating\Template */
     private $template;
@@ -133,6 +139,7 @@ class Nestraps implements \Nette\Forms\IFormRenderer {
         $this->template->form = $form;
         $this->template->errors = $errors;
         $this->template->renderer = $this;
+        $this->template->errorsAtInputs = $this->errorsAtInputs;
 
         // And echo the output
         echo $this->template;

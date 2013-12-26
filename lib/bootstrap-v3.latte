@@ -57,116 +57,128 @@
 {* ====== Do not edit bellow this line. It contains the full markup. ====== *}
 {* Base style (the most generic one) *}
 {define #BaseStyle}
-<div id="{$control->htmlId}-pair" n:class="$control->getOption('status')? $control->getOption('status'), $control->getOption('required')? required, control-group, $control->errors ? error">
-    {label $renderer->getControlName($control), 'class' => 'control-label' /}
+{? $horizontalForm = (strpos($form->getElementPrototype()->attrs['class'], 'form-horizontal') !== false)}
 
-    {* placeholder n' stuff *}
+{* Create row for the field if this is horizontal form *}
+<div id="{$control->htmlId}-pair" n:class="form-group, $control->getOption('status')?  'has-' . $control->getOption('status'), $control->getOption('required')? required, $control->errors ? has-error">
+
+    {* Setup *}
+    {if !isset($control->labelPrototype->class) && $horizontalForm}{? $control->labelPrototype->class = 'control-label col-xs-12 col-sm-2'}{/if}
+    {if !isset($control->labelPrototype->class) && !$horizontalForm}{? $control->labelPrototype->class = 'control-label'}{/if}
+    {if !$control->getOption('class', false) && !isset($control->controlPrototype->class)}{? $control->controlPrototype->class = 'form-control'}{/if}
     {if $control->getOption('placeholder', false)}{? $control->controlPrototype->placeholder = $control->getOption('placeholder')}{/if}
     {if $control->getOption('class', false)}{? $control->controlPrototype->class = $control->getOption('class')}{/if}
+    {var $prepend => ''}
+    {var $append => ''}
 
-    <div class="controls">
-        {* prepend / append? *}
-        {if $control->getOption('prepend') || $control->getOption('append') || $control->getOption('prepend-html') || $control->getOption('append-html')}
-            {* prepend *}
-            {var prepend => \Nette\Utils\Html::el()}
-            {if $control->getOption('prepend-button', false)}
-                {? $prepend->setName('button')->setId($control->getOption('prepend-button'))->setClass('btn')->addClass($control->getOption('prepend-button-class', ''))}
-            {elseif $control->getOption('prepend', false) && !$control->getOption('prepend-button')}
-                {? $prepend->setName('span')->setClass('add-on')}
-            {/if}
-            {if $control->getOption('prepend', false)}
-                {? $prepend->setText($control->getOption('prepend'))}
-            {/if}
-            {if $control->getOption('prepend-html', false)}
-                {? $prepend = $control->getOption('prepend-html')}
-            {/if}
+    {* Prepend *}
+    {if $control->getOption('prepend-html')}
+        {? $prepend = $control->getOption('prepend-html')}
+    {elseif $control->getOption('prepend-button')}
+        {capture $prepend}
+            <span class="input-group-btn">
+                <button type="submit" class="btn {$control->getOption('prepend-button-class')}">{$control->getOption('prepend')}</button>
+            </span>
+        {/capture}
+    {elseif $control->getOption('prepend')}
+        {capture $prepend}<span class="input-group-addon">{$control->getOption('prepend')}</span>{/capture}
+    {/if}
+    {if $control->getOption('append-html')}
+        {? $append = $control->getOption('append-html')}
+    {elseif $control->getOption('append-button')}
+        {capture $append}
+            <span class="input-group-btn">
+                <button type="submit" class="btn {$control->getOption('append-button-class')}">{$control->getOption('append')}</button>
+            </span>
+        {/capture}
+    {elseif $control->getOption('append')}
+        {capture $append}<span class="input-group-addon">{$control->getOption('append')}</span>{/capture}
+    {/if}
 
-            {* append *}
-            {var append => \Nette\Utils\Html::el()}
-            {if $control->getOption('append-button', false)}
-                {? $append->setName('button')->setId($control->getOption('append-button'))->setClass('btn')->addClass($control->getOption('append-button-class', ''))}
-            {elseif $control->getOption('append', false) && !$control->getOption('append-button')}
-                {? $append->setName('span')->setClass('add-on')}
-            {/if}
-            {if $control->getOption('append', false)}
-                {? $append->setText($control->getOption('append'))}
-            {/if}
-            {if $control->getOption('append-html', false)}
-                {? $append = $control->getOption('append-html')}
-            {/if}
+    {* Label *}
+    {label $renderer->getControlName($control) /}
 
-            {* segmented? *}
-            {if ($control->getOption('prepend-segmented', false) || $control->getOption('append-segmented', false)) && (($prepend && !$append) || (!$prepend && $append))}
-                {if $prepend}<div class="input-prepend">{!$prepend}</div>{/if}{input $renderer->getControlName($control)}{if $append}<div class="input-append">{!$append}</div>{/if}
-            {else}
-                <div n:class="$control->getOption('prepend') ? 'input-prepend', $control->getOption('prepend-html') ? 'input-prepend', $control->getOption('append') ? 'input-append', $control->getOption('append-html') ? 'input-append'">
-                    {!$prepend}{input $renderer->getControlName($control)}{!$append}
-                </div>
-            {/if}
+    {* Input *}
+    {if $horizontalForm}<div class="col-xs-12 col-sm-6">{/if}
+        {if $prepend || $append}<div class="input-group">{/if}
+            {!$prepend}{input $renderer->getControlName($control)}{!$append}
+        {if $prepend || $append}</div>{/if}
+        {if $control->getOption('help-style', 'inline') === 'block'}{include #helpAndError control => $control}{/if}
+    {if $horizontalForm}</div>{/if}
 
-        {else}
-            {input $renderer->getControlName($control)}
-        {/if}
-
-        {include #helpAndError control => $control}
-    </div>
+    {if $control->getOption('help-style', 'inline') === 'inline'}{include #helpAndError control => $control}{/if}
 </div>
 {/define}
 
 {* base help block *}
 {define #helpAndError}
-    {if $control->getOption('help', false) && !$control->hasErrors()}
-        <span class="help-{$control->getOption('help-style', 'inline')}">{$control->getOption('help')}</span>
-    {elseif $control->hasErrors()}
-        {foreach $control->getErrors() as $err}
-            <span class="help-inline">{$err}</span>
-        {/foreach}
-    {/if}
+    <p class="help-block" n:if="$control->getOption('help', false) && !$control->hasErrors()">{$control->getOption('help')}</p>
+    <p class="help-block" n:if="$control->hasErrors()" n:foreach="$control->getErrors() as $err">{$err}</p>
 {/define}
 
-{* Radio list *}
+{* Radio list. Thanks to fucking bootstrap, we have to fucking copypastah codez. *}
 {define #RadioList}
-<div id="{$control->htmlId}-pair" n:class="$control->getOption('status')? $control->getOption('status'), $control->getOption('required')? required, control-group, $control->errors ? error">
-    {label $renderer->getControlName($control), 'class' => 'control-label' /}
+{? $horizontalForm = (strpos($form->getElementPrototype()->attrs['class'], 'form-horizontal') !== false)}
+    <div id="{$control->htmlId}-pair" n:class="form-group, $control->getOption('status')?  'has-' . $control->getOption('status'), $control->getOption('required')? required, $control->errors ? has-error">
 
-    <div class="controls">
-    {foreach $control->items as $key => $item}
-        {var one => $control->getControl($key)}
-        {!$one[1]->addClass('radio')->startTag()}{$one[0]}{$item}{!$one[1]->endTag()}
-    {/foreach}
+        {* Setup *}
+        {if !isset($control->labelPrototype->class) && $horizontalForm}{? $control->labelPrototype->class = 'control-label col-xs-12 col-sm-2'}{/if}
+        {if !isset($control->labelPrototype->class) && !$horizontalForm}{? $control->labelPrototype->class = 'control-label'}{/if}
+
+        {* Label *}
+        {label $renderer->getControlName($control) /}
+
+        {* Input *}
+        {if $horizontalForm}<div class="col-xs-12 col-sm-6">{/if}
+            {foreach $control->items as $key => $item}
+                {if !$control->getOption('inline', false)}<div class="radio">{/if}
+                {var one => $control->getControl($key)}
+                {!$one[1]->addClass($control->getOption('inline') ? 'radio-inline' : 'radio')->startTag()}{$one[0]}{$item}{!$one[1]->endTag()}
+                {if !$control->getOption('inline', false)}</div>{/if}
+            {/foreach}
+            {if $control->getOption('help-style', 'inline') === 'block'}{include #helpAndError control => $control}{/if}
+        {if $horizontalForm}</div>{/if}
+
+        {if $control->getOption('help-style', 'inline') === 'inline'}{include #helpAndError control => $control}{/if}
+    </div>
+{/define}
+
+{* Checkbox + checkbox inline styles. Thanks to fucking bootstrap, we have to fucking copypastah codez. *}
+{define #Checkbox}
+    <div n:if="!$control->getOption('inline', false)" id="{$control->htmlId}-pair" n:class="form-group, $control->getOption('status')?  'has-' . $control->getOption('status'), $control->getOption('required')? required, $control->errors ? has-error">
+        <div class="col-sm-offset-2 col-sm-10">
+            <div class="checkbox">
+                {!$control->label->addClass('inline checkbox')->startTag()}{input $renderer->getControlName($control)}{$control->caption}{!$control->label->endTag()}
+            </div>
+            {include #helpAndError control => $control}
+        </div>
     </div>
 
-    {include #helpAndError control => $control}
-</div>
-{/define}
+    {? $horizontalForm = (strpos($form->getElementPrototype()->attrs['class'], 'form-horizontal') !== false)}
 
-{* Checkbox + checkbox inline styles *}
-{define #Checkbox}
     {if $control->getOption('inline', false)}
         {if $renderer->openStack()}
-            <div id="{$control->htmlId}-pair" n:class="$control->getOption('status')? $control->getOption('status'), $control->getOption('required')? required, control-group, $control->errors ? error">
-            {$control->label->setText($control->getOption('label'))->addClass('control-label')->setFor(null)}
-            <div class="controls">
+            <div id="{$control->htmlId}-pair" n:class="form-group, $control->getOption('status')?  'has-' . $control->getOption('status'), $control->getOption('required')? required, $control->errors ? has-error">
+            <label n:if="!isset($control->labelPrototype->class) && $horizontalForm" class="control-label col-xs-12 col-sm-2">{$control->getOption('label')}</label>
+            <label n:if="!isset($control->labelPrototype->class) && !$horizontalForm" class="control-label">{$control->getOption('label')}</label>
+            {if $horizontalForm}<div class="col-xs-12 col-sm-6">{/if}
         {/if}
 
-        {!$control->label->addClass('inline checkbox')->startTag()}
-        {input $renderer->getControlName($control)}
-        {$control->caption}
-        {!$control->label->endTag()}
+        {!$control->label->addClass('checkbox-inline')->startTag()}{input $renderer->getControlName($control)}{$control->caption}{!$control->label->endTag()}
     {/if}
-    {if $renderer->closeStack($iterator, $control)}</div>{include #helpAndError control => $control}</div>{/if}
-
-    {if !$control->getOption('inline', false)}
-        {include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+    {if $renderer->closeStack($iterator, $control)}
+        {if $horizontalForm}</div>{/if}
+        {include #helpAndError control => $control}
+        </div>
     {/if}
 {/define}
 
 {* buttons *}
 {define #Button}
     {? $control->controlPrototype->addClass('btn')->addClass($control->getOption('class', ''))}
-    {if $renderer->openStack()}<div class="form-actions">{/if}
+    {if $renderer->openStack()}<div class="form-group"><div class="col-sm-offset-2 col-sm-10">{/if}
     {input $renderer->getControlName($control)}
-    {if $renderer->closeStack($iterator, $control)}</div>{/if}
+    {if $renderer->closeStack($iterator, $control)}</div></div>{/if}
 {/define}
 
 {* Inheriting fields *}
@@ -184,12 +196,12 @@
 
 {* ====== The main form rendering code ====== *}
 {block #form}
-{? $renderer->setFormClass($form, 'form-horizontal', array('form-inline', 'form-horizontal', 'form-search')) }
-{form $form}
+{? $renderer->setFormClass($form, 'form-horizontal', array('form-inline', 'form-horizontal', 'form-search', 'form-default'))}
+{form $form role => 'form'}
     {* errors *}
-    {foreach $errors as $error}
-        <div class="alert alert-danger">{$error}</div>
-    {/foreach}
+    <div class="row" n:if="!empty($errors)">
+        <div class="col-xs-12 col-md-9 col-md-offset-3 text-danger" n:foreach="$errors as $error">{$error}</div>
+    </div>
 
     {* groups *}
     {foreach $form->getGroups() as $group}
