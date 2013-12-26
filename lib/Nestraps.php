@@ -32,7 +32,7 @@ use Nette\Utils\Strings;
 class Nestraps implements \Nette\Forms\IFormRenderer {
 
     /** @var string Default bootstrap (v 3.0) */
-    const BOOTSTRAP = 'bootstrap-v2.latte';
+    const BOOTSTRAP = 'bootstrap-v3.latte';
 
     /** @var string Default foundation (v 5.0) */
     const FOUNDATION = 'foundation-v5.latte';

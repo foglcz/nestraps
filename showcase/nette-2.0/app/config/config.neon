@@ -24,7 +24,11 @@ common:
         router: @routerFactory::createRouter
 
     factories:
-
+        form:
+            parameters: [type]
+            class: \Nette\Application\UI\Form
+            setup:
+                - setRenderer(\foglcz\Nestraps(%type%, @cacheStorage))
 
 production < common:
 

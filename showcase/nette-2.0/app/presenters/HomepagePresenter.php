@@ -100,8 +100,7 @@ class HomepagePresenter extends BasePresenter {
      * Using http://getbootstrap.com/2.3.2/base-css.html#forms
      */
     public function createComponentBootstrap2($name) {
-        $form = new \Nette\Application\UI\Form($this, $name);
-        $form->setRenderer(new \foglcz\Nestraps(\foglcz\Nestraps::BOOTSTRAP_2, $this->getContext()->getService('cacheStorage')));
+        $form = $this->getContext()->createForm(\foglcz\Nestraps::BOOTSTRAP_2);
 
         // Type of form? The form-horizontal is default.
         //$form->elementPrototype->attrs['class'] = 'form-inline';
@@ -183,8 +182,7 @@ class HomepagePresenter extends BasePresenter {
      * using http://getbootstrap.com/css/#forms
      */
     public function createComponentBootstrap3($name) {
-        $form = new \Nette\Application\UI\Form($this, $name);
-        $form->setRenderer(new \foglcz\Nestraps(\foglcz\Nestraps::BOOTSTRAP_3, $this->getContext()->getService('cacheStorage')));
+        $form = $this->getContext()->createForm(\foglcz\Nestraps::BOOTSTRAP_3);
 
         // Type of form? form-horizontal style is default.
         //$form->elementPrototype->attrs['class'] = 'form-inline';
