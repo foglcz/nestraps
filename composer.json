@@ -22,6 +22,6 @@
         "nette/nette": "2.*"
     },
     "autoload": {
-        "classmap": ["."]
+        "classmap": ["lib/"]
     }    
 }

@@ -1,0 +1,232 @@
+{**
+ * The Bootstrap style nette forms
+ *
+ * Due to bootstraps nature, we have following options available:
+ * $field->setOption('help', 'help text shown next to control');
+ * $field->setOption('status', 'warning|errors|success'); --> the css style of the field
+ * $field->setOption('prepend', 'text'); --> the prepend field part
+ * $field->setOption('append', 'text');  --> the append field part
+ * $field->setOption('placeholder', 'text'); --> the placeholder="" parameter
+ *
+ * If you want block style of help, use following:
+ * $field->setOption('help', 'help text shown next to control')->setOption('help-style', 'block');
+ *
+ * The neat inline checkboxes are generated this way:
+ *   $form->addCheckbox('chk1', 'caption 1')->setOption('inline', true)->setOption('label', 'checkbox group label');
+ *   $form->addCheckbox('chk2', 'caption 2')->setOption('inline', true);
+ *   $form->addCheckbox('chk3', 'caption 3')->setOption('inline', true);
+ *
+ * Buttons have some special classes as well:
+ * $form->addSubmit()->setOption('class', 'btn-success')
+ *
+ * Prepend/append can be used with conjunction of:
+ * $field->setOption('prepend-button', 'id');
+ * $field->setOption('append-button', 'id');
+ *   where the "id" means HTML id of button, so that you can use it within javascripts
+ *
+ * Prepend/append buttons can be used also with:
+ * $field->setOption('prepend-button-class', 'btn-success|btn-warning|btn-danger|btn-primary|...');
+ * $field->setOption('append-button-class', 'btn-success|btn-warning|btn-danger|btn-primary|...');
+ *   where the value is appended as class to the button
+ *
+ * If you want inline checkboxes / radiobuttons, use following attribute on EACH checkbox of the inline group:
+ * $field->setOption('inline', true);
+ *
+ * If you are working with submits or buttons & want to edit class, use the "Standart Nette Way ^TM":
+ * $field->controlPrototype->class = 'btn btn-success'; // (this generates green button)
+ *
+ * OVERLOADING:
+ * Don't really worry about manually editing this file -- altough it's possible, much cleaner approach is to create
+ * your own template with following markup:
+ *   {layout 'path/to/bootstrap.latte'}
+ *   {define #TextInput}<insert text input markup here>{/define}
+ *
+ * If you want to overload some field but not overload the input globally, use following:
+ * $field->setOption('latte', 'path/to/your/overloaded.latte');
+ *
+ * ... or:
+ * $field->setOption('blockname', 'nameOfYourDefineBlockWithoutHash');
+ *
+ * NOTE:
+ * In this template, the <hidden> fields are rendered as last. The easiest way to extend any field is:
+ *     $form->addHidden(...)->setOption('latte', 'path/to/your/field.latte')
+ *
+ * @author Pavel Ptacek
+ *}
+
+{* ====== Do not edit bellow this line. It contains the full markup. ====== *}
+{* Base style (the most generic one) *}
+{define #BaseStyle}
+<div id="{$control->htmlId}-pair" n:class="$control->getOption('status')? $control->getOption('status'), $control->getOption('required')? required, control-group, $control->errors ? error">
+    {label $renderer->getControlName($control), 'class' => 'control-label' /}
+
+    {* placeholder n' stuff *}
+    {if $control->getOption('placeholder', false)}{? $control->controlPrototype->placeholder = $control->getOption('placeholder')}{/if}
+    {if $control->getOption('class', false)}{? $control->controlPrototype->class = $control->getOption('class')}{/if}
+
+    <div class="controls">
+        {* prepend / append? *}
+        {if $control->getOption('prepend') || $control->getOption('append') || $control->getOption('prepend-html') || $control->getOption('append-html')}
+            {* prepend *}
+            {var prepend => \Nette\Utils\Html::el()}
+            {if $control->getOption('prepend-button', false)}
+                {? $prepend->setName('button')->setId($control->getOption('prepend-button'))->setClass('btn')->addClass($control->getOption('prepend-button-class', ''))}
+            {elseif $control->getOption('prepend', false) && !$control->getOption('prepend-button')}
+                {? $prepend->setName('span')->setClass('add-on')}
+            {/if}
+            {if $control->getOption('prepend', false)}
+                {? $prepend->setText($control->getOption('prepend'))}
+            {/if}
+            {if $control->getOption('prepend-html', false)}
+                {? $prepend = $control->getOption('prepend-html')}
+            {/if}
+
+            {* append *}
+            {var append => \Nette\Utils\Html::el()}
+            {if $control->getOption('append-button', false)}
+                {? $append->setName('button')->setId($control->getOption('append-button'))->setClass('btn')->addClass($control->getOption('append-button-class', ''))}
+            {elseif $control->getOption('append', false) && !$control->getOption('append-button')}
+                {? $append->setName('span')->setClass('add-on')}
+            {/if}
+            {if $control->getOption('append', false)}
+                {? $append->setText($control->getOption('append'))}
+            {/if}
+            {if $control->getOption('append-html', false)}
+                {? $append = $control->getOption('append-html')}
+            {/if}
+
+            {* segmented? *}
+            {if ($control->getOption('prepend-segmented', false) || $control->getOption('append-segmented', false)) && (($prepend && !$append) || (!$prepend && $append))}
+                {if $prepend}<div class="input-prepend">{!$prepend}</div>{/if}{input $renderer->getControlName($control)}{if $append}<div class="input-append">{!$append}</div>{/if}
+            {else}
+                <div n:class="$control->getOption('prepend') ? 'input-prepend', $control->getOption('prepend-html') ? 'input-prepend', $control->getOption('append') ? 'input-append', $control->getOption('append-html') ? 'input-append'">
+                    {!$prepend}{input $renderer->getControlName($control)}{!$append}
+                </div>
+            {/if}
+
+        {else}
+            {input $renderer->getControlName($control)}
+        {/if}
+
+        {include #helpAndError control => $control}
+    </div>
+</div>
+{/define}
+
+{* base help block *}
+{define #helpAndError}
+    {if $control->getOption('help', false) && !$control->hasErrors()}
+        <span class="help-{$control->getOption('help-style', 'inline')}">{$control->getOption('help')}</span>
+    {elseif $control->hasErrors()}
+        {foreach $control->getErrors() as $err}
+            <span class="help-inline">{$err}</span>
+        {/foreach}
+    {/if}
+{/define}
+
+{* Radio list *}
+{define #RadioList}
+<div id="{$control->htmlId}-pair" n:class="$control->getOption('status')? $control->getOption('status'), $control->getOption('required')? required, control-group, $control->errors ? error">
+    {label $renderer->getControlName($control), 'class' => 'control-label' /}
+
+    <div class="controls">
+    {foreach $control->items as $key => $item}
+        {var one => $control->getControl($key)}
+        {!$one[1]->addClass('radio')->startTag()}{$one[0]}{$item}{!$one[1]->endTag()}
+    {/foreach}
+    </div>
+
+    {include #helpAndError control => $control}
+</div>
+{/define}
+
+{* Checkbox + checkbox inline styles *}
+{define #Checkbox}
+    {if $control->getOption('inline', false)}
+        {if $renderer->openStack()}
+            <div id="{$control->htmlId}-pair" n:class="$control->getOption('status')? $control->getOption('status'), $control->getOption('required')? required, control-group, $control->errors ? error">
+            {$control->label->setText($control->getOption('label'))->addClass('control-label')->setFor(null)}
+            <div class="controls">
+        {/if}
+
+        {!$control->label->addClass('inline checkbox')->startTag()}
+        {input $renderer->getControlName($control)}
+        {$control->caption}
+        {!$control->label->endTag()}
+    {/if}
+    {if $renderer->closeStack($iterator, $control)}</div></div>{/if}
+
+    {if !$control->getOption('inline', false)}
+        {include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+    {/if}
+{/define}
+
+{* buttons *}
+{define #Button}
+    {? $control->controlPrototype->addClass('btn')->addClass($control->getOption('class', ''))}
+    {if $renderer->openStack()}<div class="form-actions">{/if}
+    {input $renderer->getControlName($control)}
+    {if $renderer->closeStack($iterator, $control)}</div>{/if}
+{/define}
+
+{* Inheriting fields *}
+{define #SelectBox}{include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}{/define}
+{define #MultiSelectBox}{include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}{/define}
+{define #TextInput}{include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}{/define}
+{define #TextArea}{include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}{/define}
+{define #UploadControl}{include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}{/define}
+
+{define #ImageButton}{include #Button control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}{/define}
+{define #SubmitButton}{include #Button control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}{/define}
+
+{* Simple fields *}
+{define #HiddenField}{input $renderer->getControlName($control)}{/define}
+
+{* ====== The main form rendering code ====== *}
+{block #form}
+{? $renderer->setFormClass($form, 'form-horizontal', array('form-inline', 'form-horizontal', 'form-search')) }
+{form $form}
+    {* errors *}
+    {foreach $errors as $error}
+        <div class="alert alert-danger">{$error}</div>
+    {/foreach}
+
+    {* groups *}
+    {foreach $form->getGroups() as $group}
+        {if $group->getOption('label', false)}
+        <fieldset>
+            <legend>{$group->getOption('label')}</legend>
+            {if $group->getOption('description', false)}<p>{$group->getOption('description')}</p>{/if}
+        {/if}
+
+        {foreach $group->controls as $control}
+            {continueIf $control->getForm(FALSE) !== $form || $control->getOption('rendered') || !$group->getControls() || !$group->getOption('visual')}
+            {var $block => $control->getOption('blockname')}
+            {ifset #$block}
+                {include #$block control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+            {elseif $control->getOption('latte', false)}
+                {include $control->getOption('latte') control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+            {else}
+                {include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+            {/ifset}
+            {? $control->setOption('rendered', true)}
+        {/foreach}
+
+        {if $group->getOption('label', false)}</fieldset>{/if}
+    {/foreach}
+
+    {* rest of the controls *}
+    {foreach $form->getControls() as $control}
+        {continueIf $control->getForm(FALSE) !== $form || $control->getOption('rendered')}
+        {var $block => $control->getOption('blockname')}
+        {ifset #$block}
+            {include #$block control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+        {elseif $control->getOption('latte', false)}
+            {include $control->getOption('latte') control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+        {else}
+            {include #BaseStyle control => $control, form => $form, errors => $errors, renderer => $renderer, iterator => $iterator, _form => $_form}
+        {/ifset}
+        {? $control->setOption('rendered', true)}
+    {/foreach}
+{/form}
+{/block}

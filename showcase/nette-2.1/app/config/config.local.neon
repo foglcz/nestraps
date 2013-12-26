@@ -1,0 +1,9 @@
+parameters:
+
+nette:
+	database:
+		dsn: 'mysql:host=localhost;dbname=test'
+		user:
+		password:
+		options:
+			lazy: yes

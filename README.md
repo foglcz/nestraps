@@ -1,9 +1,19 @@
-nestraps
-========
+Bootstrap / Zurb Foundation forms for Nette Framework
+=====================================================
 
-The Bootstrap style nette forms
+Installation
+------------
+```
+$ composer require foglcz/nestraps
+```
 
-How to use:
+
+How to use in nette
+-------------------
+
+Update your `config.neon`:
+
+
 
 ```php
 $form->setRenderer(new foglcz\Nestrap);
